@@ -1,5 +1,8 @@
 "use client";
 
+import type React from "react";
+
+import { useRouter } from "next/navigation";
 import { useState, FormEvent } from "react";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,31 +18,38 @@ export default function SearchButton() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [result, setResult] = useState<SearchResult | null>(null);
 
+  const router = useRouter();
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
-    try {
-      const response = await fetch("/api/genanimation", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ query: searchQuery }),
-      });
+    // try {
+    //   const response = await fetch("/api/genanimation", {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //     },
+    //     body: JSON.stringify({ query: searchQuery }),
+    //   });
 
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
+    //   if (!response.ok) {
+    //     throw new Error("Network response was not ok");
+    //   }
 
-      const data = await response.json();
-      console.log(data);
-      setResult({ data });
-    } catch (error) {
-      console.error("Error:", error);
-      setResult({ error: "An error occurred while processing your request." });
-    } finally {
-      setIsLoading(false);
+    //   const data = await response.json();
+    //   console.log(data);
+    //   setResult({ data });
+    // } catch (error) {
+    //   console.error("Error:", error);
+    //   setResult({ error: "An error occurred while processing your request." });
+    // } finally {
+    //   setIsLoading(false);
+    // }
+    //
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
@@ -62,19 +72,6 @@ export default function SearchButton() {
           </Button>
         </div>
       </form>
-
-      {result && (
-        <div className="mt-8">
-          <h2 className="mb-4 text-2xl font-semibold">Search Result</h2>
-          {result.error ? (
-            <p className="text-red-500">{result.error}</p>
-          ) : (
-            <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto">
-              {JSON.stringify(result.data, null, 2)}
-            </pre>
-          )}
-        </div>
-      )}
     </div>
   );
 }

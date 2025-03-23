@@ -10,7 +10,6 @@ const modelName = process.env.AZURE_MODEL_NAME!;
 export async function POST(req: Request) {
   try {
     const { query } = await req.json();
-
     console.log(query);
 
     const client = ModelClient(
@@ -40,18 +39,32 @@ export async function POST(req: Request) {
     }
 
     const content = response.body.choices[0].message.content;
-    const match = content.match(/<think>([\s\S]*?)<\/think>\s*([\s\S]*)/);
 
-    if (match) {
-      const [, thinking, answer] = match;
+    // First check for thinking/answer format
+    const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>\s*([\s\S]*)/);
+
+    if (thinkMatch) {
+      const [, thinking, answer] = thinkMatch;
+
+      // Extract JSX/TSX code from the answer
+      const codeMatch = answer.match(/```(?:jsx|tsx)\s*([\s\S]*?)```/);
+      const jsxCode = codeMatch ? codeMatch[1].trim() : null;
+
       return NextResponse.json({
         thinking: thinking.trim(),
-        answer: answer.trim(),
+        answer: jsxCode || answer.trim(),
       });
     } else {
-      return NextResponse.json({ answer: content.trim() });
+      // If no thinking/answer format, try to extract JSX/TSX directly
+      const codeMatch = content.match(/```(?:jsx|tsx)\s*([\s\S]*?)```/);
+      const jsxCode = codeMatch ? codeMatch[1].trim() : null;
+
+      return NextResponse.json({
+        answer: jsxCode || content.trim(),
+      });
     }
   } catch (error) {
+    console.error("Error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

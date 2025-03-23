@@ -13,9 +13,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
+model AnimationPost {
+  id            String   @id @default(cuid())
+  title         String
+  code          String
+  category      String
+  likes         Int      @default(0)
+  comments      Int      @default(0)
+  AverageRating Float    @default(0)
+  RatingCount   Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

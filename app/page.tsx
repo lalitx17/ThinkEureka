@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Footer } from "@/components/footer";
 import SearchButton from "@/components/search-button";
+import Link from "next/link";
 
 export default function HomePage() {
   return (
@@ -30,9 +31,14 @@ export default function HomePage() {
               "Philosophy",
               "Psychology",
             ].map((category) => (
-              <Button key={category} variant="outline" className="rounded-full">
-                {category}
-              </Button>
+              <Link
+                key={category}
+                href={`/search?q=${encodeURIComponent(category)}`}
+              >
+                <Button variant="outline" className="rounded-full">
+                  {category}
+                </Button>
+              </Link>
             ))}
           </div>
         </section>
