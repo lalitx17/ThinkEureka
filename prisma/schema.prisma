@@ -17,7 +17,10 @@ model AnimationPost {
   id            String   @id @default(cuid())
   title         String
   code          String
+  thumbnail     String
+  description   String
   category      String
+  level         String
   likes         Int      @default(0)
   comments      Int      @default(0)
   AverageRating Float    @default(0)

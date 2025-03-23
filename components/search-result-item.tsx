@@ -4,23 +4,10 @@ import { Star, Heart, MessageCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-interface Animation {
-  id: string;
-  title: string;
-  category: string;
-  likes: number;
-  comments: number;
-  thumbnail: string;
-  averageRating?: number;
-  ratingCount?: number;
-  keywords?: string[];
-  description?: string;
-}
-
 export default function SearchResultItem({
   animation,
 }: {
-  animation: Animation;
+  animation: AnimationData;
 }) {
   // Generate a short description if one isn't provided
   const description =
@@ -48,10 +35,6 @@ export default function SearchResultItem({
         </Link>
 
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-          <span className="inline-flex items-center">
-            <Clock className="mr-1 h-3.5 w-3.5" />
-            10:24
-          </span>
           <span>{animation.likes} likes</span>
           <span>{animation.comments} comments</span>
           <Link
@@ -96,11 +79,6 @@ export default function SearchResultItem({
           <Button size="sm" variant="outline" className="gap-1">
             <Heart className="h-4 w-4" />
             <span className="sr-only sm:not-sr-only">Save</span>
-          </Button>
-
-          <Button size="sm" variant="outline" className="gap-1">
-            <MessageCircle className="h-4 w-4" />
-            <span className="sr-only sm:not-sr-only">Comment</span>
           </Button>
         </div>
       </div>

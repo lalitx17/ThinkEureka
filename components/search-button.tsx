@@ -16,37 +16,10 @@ interface SearchResult {
 export default function SearchButton() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [result, setResult] = useState<SearchResult | null>(null);
 
   const router = useRouter();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    // try {
-    //   const response = await fetch("/api/genanimation", {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //     body: JSON.stringify({ query: searchQuery }),
-    //   });
-
-    //   if (!response.ok) {
-    //     throw new Error("Network response was not ok");
-    //   }
-
-    //   const data = await response.json();
-    //   console.log(data);
-    //   setResult({ data });
-    // } catch (error) {
-    //   console.error("Error:", error);
-    //   setResult({ error: "An error occurred while processing your request." });
-    // } finally {
-    //   setIsLoading(false);
-    // }
-    //
     e.preventDefault();
     if (searchQuery.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);

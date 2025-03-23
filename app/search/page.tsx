@@ -10,226 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SearchResultsList from "@/components/search-results-list";
-
-// Sample data for all animations
-const allAnimations = [
-  {
-    id: "1",
-    title: "Quantum Superposition",
-    category: "Physics",
-    likes: 342,
-    comments: 56,
-    thumbnail: "/placeholder.svg?height=200&width=350",
-    averageRating: 8.7,
-    ratingCount: 243,
-    keywords: [
-      "quantum",
-      "physics",
-      "superposition",
-      "quantum mechanics",
-      "wave function",
-    ],
-    description:
-      "Explore the fascinating world of quantum mechanics through this interactive animation explaining how particles can exist in multiple states simultaneously until measured.",
-  },
-  {
-    id: "2",
-    title: "Neural Networks Explained",
-    category: "Computer Science",
-    likes: 289,
-    comments: 42,
-    thumbnail: "/placeholder.svg?height=200&width=350",
-    averageRating: 9.2,
-    ratingCount: 187,
-    keywords: [
-      "neural networks",
-      "ai",
-      "machine learning",
-      "deep learning",
-      "computer science",
-    ],
-    description:
-      "Understand how artificial neural networks function by mimicking the human brain. This animation breaks down complex concepts into simple visual explanations.",
-  },
-  {
-    id: "3",
-    title: "Fourier Transforms",
-    category: "Mathematics",
-    likes: 256,
-    comments: 38,
-    thumbnail: "/placeholder.svg?height=200&width=350",
-    averageRating: 7.8,
-    ratingCount: 156,
-    keywords: [
-      "fourier",
-      "mathematics",
-      "transforms",
-      "signal processing",
-      "waves",
-    ],
-    description:
-      "Visualize how Fourier transforms convert signals between time and frequency domains, a fundamental concept in signal processing and data analysis.",
-  },
-  {
-    id: "4",
-    title: "Cognitive Dissonance",
-    category: "Psychology",
-    likes: 198,
-    comments: 27,
-    thumbnail: "/placeholder.svg?height=200&width=350",
-    averageRating: 8.3,
-    ratingCount: 112,
-    keywords: ["cognitive", "psychology", "dissonance", "behavior", "mind"],
-    description:
-      "Discover how conflicting beliefs create psychological discomfort and how humans resolve these internal conflicts through various mental strategies.",
-  },
-  {
-    id: "5",
-    title: "Blockchain Technology",
-    category: "Computer Science",
-    likes: 176,
-    comments: 31,
-    thumbnail: "/placeholder.svg?height=200&width=350",
-    averageRating: 9.5,
-    ratingCount: 98,
-    keywords: [
-      "blockchain",
-      "cryptocurrency",
-      "distributed ledger",
-      "computer science",
-      "bitcoin",
-    ],
-    description:
-      "Learn how blockchain creates secure, decentralized record-keeping through this step-by-step animation of transactions, blocks, and consensus mechanisms.",
-  },
-  {
-    id: "6",
-    title: "Chaos Theory",
-    category: "Mathematics",
-    likes: 221,
-    comments: 35,
-    thumbnail: "/placeholder.svg?height=200&width=350",
-    averageRating: 8.9,
-    ratingCount: 132,
-    keywords: [
-      "chaos",
-      "mathematics",
-      "butterfly effect",
-      "complex systems",
-      "deterministic",
-    ],
-    description:
-      "Explore how small changes in initial conditions can lead to vastly different outcomes in deterministic systems, illustrated through captivating visual examples.",
-  },
-  {
-    id: "7",
-    title: "Relativity Simplified",
-    category: "Physics",
-    likes: 312,
-    comments: 48,
-    thumbnail: "/placeholder.svg?height=200&width=350",
-    averageRating: 9.3,
-    ratingCount: 215,
-    keywords: ["relativity", "physics", "einstein", "spacetime", "gravity"],
-    description:
-      "Einstein's theories of relativity explained through intuitive animations that demonstrate how space, time, and gravity are interconnected in our universe.",
-  },
-  {
-    id: "8",
-    title: "Game Theory Basics",
-    category: "Mathematics",
-    likes: 187,
-    comments: 29,
-    thumbnail: "/placeholder.svg?height=200&width=350",
-    averageRating: 8.6,
-    ratingCount: 143,
-    keywords: [
-      "game theory",
-      "mathematics",
-      "strategy",
-      "nash equilibrium",
-      "decision making",
-    ],
-    description:
-      "Understand strategic decision-making through interactive examples of classic game theory scenarios like the Prisoner's Dilemma and Nash Equilibrium.",
-  },
-  {
-    id: "9",
-    title: "String Theory Explained",
-    category: "Physics",
-    likes: 124,
-    comments: 18,
-    thumbnail: "/placeholder.svg?height=200&width=350",
-    averageRating: 7.9,
-    ratingCount: 42,
-    keywords: [
-      "string theory",
-      "physics",
-      "quantum gravity",
-      "dimensions",
-      "unified theory",
-    ],
-    description:
-      "Dive into the theoretical framework where one-dimensional strings replace point-like particles as the fundamental building blocks of the universe.",
-  },
-  {
-    id: "10",
-    title: "Cryptography Fundamentals",
-    category: "Computer Science",
-    likes: 156,
-    comments: 23,
-    thumbnail: "/placeholder.svg?height=200&width=350",
-    averageRating: 8.2,
-    ratingCount: 67,
-    keywords: [
-      "cryptography",
-      "encryption",
-      "security",
-      "computer science",
-      "ciphers",
-    ],
-    description:
-      "Learn the principles of secure communication through visual demonstrations of encryption algorithms, key exchange methods, and digital signatures.",
-  },
-  {
-    id: "11",
-    title: "Behavioral Economics",
-    category: "Economics",
-    likes: 98,
-    comments: 14,
-    thumbnail: "/placeholder.svg?height=200&width=350",
-    averageRating: 8.0,
-    ratingCount: 35,
-    keywords: [
-      "behavioral",
-      "economics",
-      "psychology",
-      "decision making",
-      "irrationality",
-    ],
-    description:
-      "Explore how psychological, social, and emotional factors influence economic decisions, challenging traditional models of rational economic behavior.",
-  },
-  {
-    id: "12",
-    title: "Topology Basics",
-    category: "Mathematics",
-    likes: 112,
-    comments: 19,
-    thumbnail: "/placeholder.svg?height=200&width=350",
-    averageRating: 7.5,
-    ratingCount: 28,
-    keywords: [
-      "topology",
-      "mathematics",
-      "shapes",
-      "continuous deformation",
-      "manifolds",
-    ],
-    description:
-      "Discover the mathematical study of shapes and spaces that are preserved under continuous deformations, from simple Möbius strips to complex manifolds.",
-  },
-];
+import { allAnimations } from "@/lib/allAnimations";
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
@@ -239,6 +20,9 @@ export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState(queryParam);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [filteredAnimations, setFilteredAnimations] = useState(allAnimations);
+  const [isLoading, setIsLoading] = useState(false);
+  const [generatedAnimation, setGeneratedAnimation] =
+    useState<AnimationData | null>(null);
 
   // Sample data for trending searches
   const trendingSearches = [
@@ -252,7 +36,39 @@ export default function SearchPage() {
     "algorithms",
   ];
 
-  // Filter animations based on search query and selected category
+  // Make API call when page loads with a query parameter
+  useEffect(() => {
+    if (queryParam) {
+      fetchGeneratedAnimation(queryParam);
+    }
+  }, [queryParam]);
+
+  // Function to fetch data from the API
+  const fetchGeneratedAnimation = async (query: string) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/genanimation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data: AnimationData = await response.json();
+      console.log("API response:", data);
+      setGeneratedAnimation(data);
+    } catch (error) {
+      console.error("Error fetching from API:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     let results = [...allAnimations];
 
@@ -263,9 +79,6 @@ export default function SearchPage() {
         (animation) =>
           animation.title.toLowerCase().includes(query) ||
           animation.category.toLowerCase().includes(query) ||
-          animation.keywords?.some((keyword) =>
-            keyword.toLowerCase().includes(query),
-          ) ||
           animation.description?.toLowerCase().includes(query),
       );
     }
@@ -277,8 +90,18 @@ export default function SearchPage() {
       );
     }
 
+    // Add generated animation to the top of the list if available
+    // and it matches the selected category (or if category is "All")
+    if (
+      generatedAnimation &&
+      (selectedCategory === "All" ||
+        generatedAnimation.category === selectedCategory)
+    ) {
+      results = [generatedAnimation, ...results];
+    }
+
     setFilteredAnimations(results);
-  }, [queryParam, selectedCategory]);
+  }, [queryParam, selectedCategory, generatedAnimation]);
 
   // Update search query when URL parameter changes
   useEffect(() => {
@@ -316,8 +139,17 @@ export default function SearchPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <Button type="submit">Search</Button>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? "Searching..." : "Search"}
+        </Button>
       </form>
+
+      {isLoading && (
+        <div className="text-center py-4">
+          <p>Generating animation for "{queryParam}"...</p>
+          {/* You can add a loading spinner here if you want */}
+        </div>
+      )}
 
       {!queryParam && (
         <div className="mb-8 text-center">
@@ -377,92 +209,6 @@ export default function SearchPage() {
 
           <TabsContent value="animations">
             <SearchResultsList animations={filteredAnimations} />
-          </TabsContent>
-
-          <TabsContent value="creators">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {[
-                {
-                  id: "1",
-                  name: "Dr. Richard Feynman",
-                  specialty: "Physics",
-                  followers: 12543,
-                  avatar: "/placeholder.svg?height=80&width=80",
-                },
-                {
-                  id: "2",
-                  name: "Prof. Ada Lovelace",
-                  specialty: "Computer Science",
-                  followers: 9876,
-                  avatar: "/placeholder.svg?height=80&width=80",
-                },
-                {
-                  id: "3",
-                  name: "Dr. Marie Curie",
-                  specialty: "Chemistry & Physics",
-                  followers: 11234,
-                  avatar: "/placeholder.svg?height=80&width=80",
-                },
-                {
-                  id: "4",
-                  name: "Prof. Alan Turing",
-                  specialty: "Mathematics & Computing",
-                  followers: 10432,
-                  avatar: "/placeholder.svg?height=80&width=80",
-                },
-                {
-                  id: "5",
-                  name: "Dr. Carl Jung",
-                  specialty: "Psychology",
-                  followers: 8765,
-                  avatar: "/placeholder.svg?height=80&width=80",
-                },
-                {
-                  id: "6",
-                  name: "Prof. Stephen Hawking",
-                  specialty: "Theoretical Physics",
-                  followers: 14321,
-                  avatar: "/placeholder.svg?height=80&width=80",
-                },
-              ]
-                // Filter creators based on search query if needed
-                .filter(
-                  (creator) =>
-                    !queryParam ||
-                    creator.name
-                      .toLowerCase()
-                      .includes(queryParam.toLowerCase()) ||
-                    creator.specialty
-                      .toLowerCase()
-                      .includes(queryParam.toLowerCase()),
-                )
-                .map((creator) => (
-                  <div
-                    key={creator.id}
-                    className="flex items-center gap-4 rounded-lg border p-4"
-                  >
-                    <div className="relative h-20 w-20 overflow-hidden rounded-full">
-                      <img
-                        src={creator.avatar || "/placeholder.svg"}
-                        alt={creator.name}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">{creator.name}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {creator.specialty}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {creator.followers.toLocaleString()} followers
-                      </p>
-                      <Button size="sm" className="mt-2">
-                        Follow
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-            </div>
           </TabsContent>
         </Tabs>
       ) : (
