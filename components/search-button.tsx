@@ -8,11 +8,6 @@ import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-interface SearchResult {
-  error?: string;
-  data?: any;
-}
-
 export default function SearchButton() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);

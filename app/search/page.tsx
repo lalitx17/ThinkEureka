@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Search } from "lucide-react";
@@ -16,6 +16,9 @@ export default function SearchPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const queryParam = searchParams.get("q") || "";
+
+  // Use a ref to track if we've already made a request for this query
+  const requestedQueryRef = useRef<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState(queryParam);
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -36,16 +39,8 @@ export default function SearchPage() {
     "algorithms",
   ];
 
-  // Make API call when page loads with a query parameter
-  useEffect(() => {
-    if (queryParam) {
-      fetchGeneratedAnimation(queryParam);
-    }
-  }, [queryParam]);
-
   // Function to fetch data from the API
   const fetchGeneratedAnimation = async (query: string) => {
-    setIsLoading(true);
     try {
       const response = await fetch("/api/genanimation", {
         method: "POST",
@@ -64,11 +59,21 @@ export default function SearchPage() {
       setGeneratedAnimation(data);
     } catch (error) {
       console.error("Error fetching from API:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
+  // Make API call only when queryParam changes and has a value
+  useEffect(() => {
+    if (queryParam && requestedQueryRef.current !== queryParam) {
+      // Track that we've made a request for this query
+      requestedQueryRef.current = queryParam;
+
+      setIsLoading(true);
+      fetchGeneratedAnimation(queryParam).finally(() => setIsLoading(false));
+    }
+  }, [queryParam]);
+
+  // Handle filtering separately
   useEffect(() => {
     let results = [...allAnimations];
 
@@ -83,15 +88,12 @@ export default function SearchPage() {
       );
     }
 
-    // Filter by category
     if (selectedCategory !== "All") {
       results = results.filter(
         (animation) => animation.category === selectedCategory,
       );
     }
 
-    // Add generated animation to the top of the list if available
-    // and it matches the selected category (or if category is "All")
     if (
       generatedAnimation &&
       (selectedCategory === "All" ||
@@ -101,16 +103,13 @@ export default function SearchPage() {
     }
 
     setFilteredAnimations(results);
-  }, [queryParam, selectedCategory, generatedAnimation]);
-
-  // Update search query when URL parameter changes
-  useEffect(() => {
-    setSearchQuery(queryParam);
-  }, [queryParam]);
+  }, [queryParam, selectedCategory, generatedAnimation, allAnimations]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      // Reset the requested query ref when user initiates a new search
+      requestedQueryRef.current = null;
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
