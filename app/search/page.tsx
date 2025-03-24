@@ -62,7 +62,6 @@ export default function SearchPage() {
     }
   };
 
-  // Make API call only when queryParam changes and has a value
   useEffect(() => {
     if (queryParam && requestedQueryRef.current !== queryParam) {
       // Track that we've made a request for this query

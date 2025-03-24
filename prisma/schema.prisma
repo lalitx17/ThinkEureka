@@ -16,7 +16,7 @@ datasource db {
 model AnimationPost {
   id            String   @id @default(cuid())
   title         String
-  code          String
+  code          String   @db.NVarChar(Max)
   thumbnail     String
   description   String
   category      String

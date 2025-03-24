@@ -4,6 +4,7 @@ interface AnimationData {
   category: string;
   code: string;
   likes: number;
+  level: string;
   comments: number;
   thumbnail: string;
   averageRating: number;
