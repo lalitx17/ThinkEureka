@@ -1,20 +1,9 @@
-"use client"
+"use client";
 
-import AnimationCard from "@/components/animation-card"
-
-interface Animation {
-  id: string
-  title: string
-  category: string
-  likes: number
-  comments: number
-  thumbnail: string
-  averageRating?: number
-  ratingCount?: number
-}
+import AnimationCard from "@/components/animation-card";
 
 interface AnimationGridProps {
-  animations: Animation[]
+  animations: AnimationPost[];
 }
 
 export default function AnimationGrid({ animations }: AnimationGridProps) {
@@ -24,6 +13,5 @@ export default function AnimationGrid({ animations }: AnimationGridProps) {
         <AnimationCard key={animation.id} animation={animation} />
       ))}
     </div>
-  )
+  );
 }
-

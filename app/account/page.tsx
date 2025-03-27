@@ -41,7 +41,7 @@ export default function AccountPage() {
       <Tabs defaultValue="saved" className="space-y-4">
         <TabsList>
           <TabsTrigger value="saved">Saved</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
+          {/* <TabsTrigger value="history">History</TabsTrigger> */}
           <TabsTrigger value="liked">Liked</TabsTrigger>
         </TabsList>
 

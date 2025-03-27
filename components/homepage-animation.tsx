@@ -1,4 +1,5 @@
 "use client";
+
 import AnimationGrid from "@/components/animation-grid";
 import { useAnimationsByCategories } from "@/hooks/use-getAllAnimations";
 

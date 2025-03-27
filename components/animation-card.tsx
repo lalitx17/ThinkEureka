@@ -1,35 +1,28 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Heart, MessageCircle, Star } from "lucide-react"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
+import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { Heart, MessageCircle, Star } from "lucide-react";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
-interface Animation {
-  id: string
-  title: string
-  category: string
-  likes: number
-  comments: number
-  thumbnail: string
-  averageRating?: number
-  ratingCount?: number
-}
-
-export default function AnimationCard({ animation }: { animation: Animation }) {
-  const [liked, setLiked] = useState(false)
-  const [likeCount, setLikeCount] = useState(animation.likes)
+export default function AnimationCard({
+  animation,
+}: {
+  animation: AnimationPost;
+}) {
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(animation.likes);
 
   const handleLike = () => {
     if (liked) {
-      setLikeCount(likeCount - 1)
+      setLikeCount(likeCount - 1);
     } else {
-      setLikeCount(likeCount + 1)
+      setLikeCount(likeCount + 1);
     }
-    setLiked(!liked)
-  }
+    setLiked(!liked);
+  };
 
   return (
     <Card className="overflow-hidden transition-all hover:shadow-md">
@@ -50,10 +43,12 @@ export default function AnimationCard({ animation }: { animation: Animation }) {
       </Link>
       <CardContent className="p-4">
         <Link href={`/animation/${animation.id}`}>
-          <h3 className="line-clamp-2 font-medium hover:text-primary">{animation.title}</h3>
+          <h3 className="line-clamp-2 font-medium hover:text-primary">
+            {animation.title}
+          </h3>
         </Link>
 
-        {animation.averageRating !== undefined && (
+        {animation.AverageRating !== undefined && (
           <div className="mt-2 flex items-center gap-1">
             <div className="flex items-center">
               {[1, 2, 3, 4, 5].map((star) => (
@@ -61,7 +56,7 @@ export default function AnimationCard({ animation }: { animation: Animation }) {
                   key={star}
                   className={cn(
                     "h-3.5 w-3.5",
-                    star <= Math.round(animation.averageRating / 2)
+                    star <= Math.round(animation.AverageRating / 2)
                       ? "fill-yellow-400 text-yellow-400"
                       : "text-muted-foreground",
                   )}
@@ -69,7 +64,8 @@ export default function AnimationCard({ animation }: { animation: Animation }) {
               ))}
             </div>
             <span className="text-xs text-muted-foreground">
-              {animation.averageRating.toFixed(1)}/10 ({animation.ratingCount} ratings)
+              {animation.AverageRating.toFixed(1)}/10 ({animation.RatingCount}{" "}
+              ratings)
             </span>
           </div>
         )}
@@ -79,7 +75,9 @@ export default function AnimationCard({ animation }: { animation: Animation }) {
           onClick={handleLike}
           className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary"
         >
-          <Heart className={cn("h-4 w-4", liked && "fill-primary text-primary")} />
+          <Heart
+            className={cn("h-4 w-4", liked && "fill-primary text-primary")}
+          />
           <span>{likeCount}</span>
         </button>
         <Link
@@ -87,10 +85,9 @@ export default function AnimationCard({ animation }: { animation: Animation }) {
           className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary"
         >
           <MessageCircle className="h-4 w-4" />
-          <span>{animation.comments}</span>
+          <span>{animation.comments?.length || "0"}</span>
         </Link>
       </CardFooter>
     </Card>
-  )
+  );
 }
-

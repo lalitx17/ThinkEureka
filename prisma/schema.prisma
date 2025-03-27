@@ -13,18 +13,43 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id         String          @id @default(cuid())
+  email      String          @unique
+  username   String
+  password   String
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  likedPosts AnimationPost[] @relation("LikedPosts")
+  savedPosts AnimationPost[] @relation("SavedPosts")
+  comments   Comment[]
+}
+
 model AnimationPost {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   title         String
-  code          String   @db.NVarChar(Max)
+  code          String    @db.NVarChar(Max)
   thumbnail     String
   description   String
   category      String
   level         String
-  likes         Int      @default(0)
-  comments      Int      @default(0)
-  AverageRating Float    @default(0)
-  RatingCount   Int      @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  likes         Int       @default(0)
+  comments      Comment[]
+  AverageRating Float     @default(0)
+  RatingCount   Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  likedBy       User[]    @relation("LikedPosts")
+  savedBy       User[]    @relation("SavedPosts")
+}
+
+model Comment {
+  id              String        @id @default(cuid())
+  content         String
+  user            User          @relation(fields: [userId], references: [id])
+  userId          String
+  post            AnimationPost @relation(fields: [AnimationPostId], references: [id])
+  AnimationPostId String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }
