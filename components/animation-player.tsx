@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import * as Babel from "@babel/standalone";
-import { motion } from "framer-motion";
-import { Heart, Pause, Play } from "lucide-react";
+import { motion, useMotionValue, useDragControls } from "framer-motion";
+import { Heart, Pause, Play, Maximize, Minimize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import RatingModal from "@/components/rating-modal";
 import { cn } from "@/lib/utils";
+import * as THREE from "three";
 
 interface AnimationPlayerProps {
   animationId: string;
@@ -17,6 +18,8 @@ const transpileAndGetComponent = (
   animationCode: string,
 ): React.FC<{ isPlaying: boolean }> | null => {
   try {
+    // Modify the transpiled code to explicitly import Framer Motion
+
     const transpiledCode = Babel.transform(animationCode, {
       presets: ["react", "env"],
     }).code;
@@ -25,16 +28,38 @@ const transpileAndGetComponent = (
 
     let exports: { [key: string]: any } = {};
     // Using a dynamic function to evaluate the transpiled code
-    new Function("exports", "React", "useState", "motion", transpiledCode!)(
-      exports,
-      React,
-      useState,
-      motion,
-    );
+    const result = new Function(
+      "exports",
+      "React",
+      "useState",
+      "useEffect",
+      "useRef",
+      "motion",
+      transpiledCode!,
+    )(exports, React, useState, useEffect, useRef, motion);
 
-    // Access the default export (LagrangeAnimation)
+    // Try to find the component in different ways
     if (exports.default) {
       return exports.default;
+    }
+
+    // If no default export, try to find a named export that looks like a component
+    const possibleComponents = Object.values(exports).filter(
+      (exp) =>
+        typeof exp === "function" && exp.prototype instanceof React.Component,
+    );
+
+    if (possibleComponents.length > 0) {
+      return possibleComponents[0];
+    }
+
+    // If still no component found, look for any function that returns JSX
+    const componentFunctions = Object.values(exports).filter(
+      (exp) => typeof exp === "function" && exp.toString().includes("return ("),
+    );
+
+    if (componentFunctions.length > 0) {
+      return componentFunctions[0];
     }
 
     return null;
@@ -54,6 +79,7 @@ export default function AnimationPlayer({
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [hasRated, setHasRated] = useState(false);
   const [animationComplete, setAnimationComplete] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const animationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [DynamicComponent, setDynamicComponent] = useState<React.ComponentType<{
     isPlaying: boolean;
@@ -70,7 +96,7 @@ export default function AnimationPlayer({
     setDynamicComponent(() => component);
   }, [animationCode]);
 
-  console.log("dyanmic component :", DynamicComponent);
+  console.log("dynamic component :", DynamicComponent);
 
   const togglePlay = () => {
     setIsPlaying(!isPlaying);
@@ -78,6 +104,10 @@ export default function AnimationPlayer({
 
   const toggleLike = () => {
     setLiked(!liked);
+  };
+
+  const toggleFullScreen = () => {
+    setIsFullScreen(!isFullScreen);
   };
 
   const handleRatingSubmit = (rating: number) => {
@@ -88,7 +118,14 @@ export default function AnimationPlayer({
 
   return (
     <>
-      <div className="relative aspect-video w-full overflow-hidden bg-black">
+      <div
+        className={cn(
+          "relative overflow-hidden bg-orange-50 transition-all duration-300 ease-in-out",
+          isFullScreen
+            ? "fixed inset-0 z-50 w-screen h-screen"
+            : "aspect-video w-full",
+        )}
+      >
         {error ? (
           <div className="flex h-full w-full items-center justify-center bg-red-100 p-4 text-red-600">
             <div className="max-w-md text-center">
@@ -142,16 +179,35 @@ export default function AnimationPlayer({
               </span>
             </div>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-white hover:bg-white/20"
-              onClick={toggleLike}
-            >
-              <Heart
-                className={cn("h-4 w-4", liked && "fill-red-500 text-red-500")}
-              />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-white hover:bg-white/20"
+                onClick={toggleFullScreen}
+                disabled={!!error}
+              >
+                {isFullScreen ? (
+                  <Minimize className="h-4 w-4" />
+                ) : (
+                  <Maximize className="h-4 w-4" />
+                )}
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-white hover:bg-white/20"
+                onClick={toggleLike}
+              >
+                <Heart
+                  className={cn(
+                    "h-4 w-4",
+                    liked && "fill-red-500 text-red-500",
+                  )}
+                />
+              </Button>
+            </div>
           </div>
         </div>
       </div>

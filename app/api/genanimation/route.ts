@@ -2,57 +2,52 @@ import { NextResponse } from "next/server";
 import ModelClient from "@azure-rest/ai-inference";
 import { AzureKeyCredential } from "@azure/core-auth";
 import { prisma } from "@/lib/prisma";
+import { prompt } from "@/lib/prompt";
 
 export const dynamic = "force-dynamic";
-const endpoint = process.env.AZURE_INFERENCE_ENDPOINT!;
-const modelName = process.env.AZURE_MODEL_NAME!;
+
+// Sanitize JSON function
+function sanitizeJson(jsonString: string): string {
+  return jsonString
+    .replace(/[\x00-\x1F\x7F]/g, "") // Remove control characters
+    .replace(/\\n/g, " ") // Replace newlines with spaces
+    .replace(/\s+/g, " ") // Collapse multiple whitespaces
+    .trim();
+}
 
 export async function POST(req: Request) {
   try {
+    // Validate environment variables
+    if (!process.env.AZURE_INFERENCE_ENDPOINT) {
+      throw new Error("AZURE_INFERENCE_ENDPOINT is not set");
+    }
+    if (!process.env.AZURE_API_KEY) {
+      throw new Error("AZURE_API_KEY is not set");
+    }
+    if (!process.env.AZURE_MODEL_NAME) {
+      throw new Error("AZURE_MODEL_NAME is not set");
+    }
+
+    const endpoint = process.env.AZURE_INFERENCE_ENDPOINT;
+    const modelName = process.env.AZURE_MODEL_NAME;
+
+    // Parse request body
     const { query } = await req.json();
-    console.log(query);
+    console.log("Received query:", query);
 
-    const prompt = `Create an educational animation about "${query}". Respond with JSON containing these fields:
-1. title: A concise, engaging title for the animation
-2. category: One of these categories - Mathematics, Physics, Computer Science, Economics, or Psychology
-3. description: A brief description of what the animation demonstrates (2-3 sentences)
-4. code: The React(jsx) code to create this animation. only use framer motion for animations. Don't have import. use default export to the function.
-5. level: One of these levels - Beginner, Intermediate, or Advanced
-
-Format your response as valid JSON without explanation text or thinking.
-example:
-
-{"title": "How to add numbers",
-"category": "Mathematics",
-"description": "This animation demonstrates how to add two numbers",
-"code": "export function AnimatedComponent({ message }) {
-    const [isAnimating, setIsAnimating] = useState(false);
-
-    return (
-      <motion.div
-        className="p-4 bg-gray-100 rounded-lg shadow-md cursor-pointer"
-        animate={{ scale: isAnimating ? 1.2 : 1 }}
-        transition={{ duration: 0.5 }}
-        onClick={() => setIsAnimating(!isAnimating)}
-      >
-        <h1 className="text-xl font-bold">Hello, React!</h1>
-        <p className="text-gray-700">{message}</p>
-      </motion.div>
-    );
-  }", "level": "Beginner"}
-`;
-
+    // Create Azure client
     const client = ModelClient(
       endpoint,
-      new AzureKeyCredential(process.env.AZURE_API_KEY!),
+      new AzureKeyCredential(process.env.AZURE_API_KEY),
     );
 
+    // Send request to Azure
     const response = await client.path("/chat/completions").post({
       body: {
         messages: [
           {
             role: "user",
-            content: prompt,
+            content: prompt(query),
           },
         ],
         max_tokens: 100000,
@@ -61,6 +56,7 @@ example:
       },
     });
 
+    // Check response
     if (!response) {
       return NextResponse.json(
         { error: "Azure API request failed" },
@@ -68,9 +64,11 @@ example:
       );
     }
 
+    // Extract content
     const content = response.body.choices[0].message.content;
     console.log("Raw API response:", content);
 
+    // JSON extraction with multiple parsing strategies
     const jsonRegex = /\{[\s\S]*\}/;
     const jsonMatch = content.match(jsonRegex);
 
@@ -78,8 +76,33 @@ example:
       throw new Error("No valid JSON found in response");
     }
 
-    const parsedData = JSON.parse(jsonMatch[0].trim());
+    // Try parsing with multiple strategies
+    let parsedData;
+    try {
+      // First, try basic sanitization
+      parsedData = JSON.parse(sanitizeJson(jsonMatch[0].trim()));
+    } catch (parseError) {
+      try {
+        // If first attempt fails, try more aggressive cleaning
+        parsedData = JSON.parse(
+          jsonMatch[0].trim().replace(/[^\x20-\x7E]/g, ""), // Remove all non-printable characters
+        );
+      } catch (aggressiveCleanError) {
+        console.error("JSON parsing failed:", parseError, aggressiveCleanError);
 
+        // Log the problematic content for debugging
+        console.log("Problematic JSON content:", jsonMatch[0]);
+
+        throw new Error("Could not parse JSON response");
+      }
+    }
+
+    // Validate parsed data
+    if (!parsedData.title || !parsedData.category) {
+      throw new Error("Invalid JSON structure");
+    }
+
+    // Create animation in database
     const newAnimation = await prisma.animationPost.create({
       data: {
         title: parsedData.title || `Animation about ${query}`,
@@ -97,6 +120,7 @@ example:
       },
     });
 
+    // Prepare response data
     const animationData = {
       id: newAnimation.id,
       title: newAnimation.title,
@@ -113,9 +137,14 @@ example:
 
     return NextResponse.json(animationData);
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Comprehensive error:", error);
+
+    // More detailed error response
     return NextResponse.json(
-      { error: "Internal server error" },
+      {
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 },
     );
   }

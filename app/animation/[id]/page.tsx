@@ -12,47 +12,191 @@ import { useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const animationCode = `
-const LagrangeAnimation = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  export default LagrangeMultiplier3D = () => {
+    const mountRef = useRef(null);
+    const [animationStep, setAnimationStep] = useState(0);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    useEffect(() => {
+      // Scene setup
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xf0f0f0);
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+      // Camera
+      const camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      camera.position.set(3, 3, 3);
+      camera.lookAt(0, 0, 0);
 
-    let animationFrame: number;
-    const gradientColors = ['#FF6B6B', '#4ECDC4', '#45B7D1'];
+      // Renderer
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(600, 400);
+      mountRef.current.appendChild(renderer.domElement);
 
-    const draw = (t: number) => {
-      // ... (rest of your animation logic)
+      // Constraint Surface (Sphere)
+      const constraintGeometry = new THREE.SphereGeometry(1, 32, 32);
+      const constraintMaterial = new THREE.MeshBasicMaterial({
+        color: 0x3333ff,
+        transparent: true,
+        opacity: 0.3
+      });
+      const constraintMesh = new THREE.Mesh(constraintGeometry, constraintMaterial);
+      scene.add(constraintMesh);
+
+      // Optimization Point
+      const pointGeometry = new THREE.SphereGeometry(0.1);
+      const pointMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+      const pointMesh = new THREE.Mesh(pointGeometry, pointMaterial);
+      scene.add(pointMesh);
+
+      // Gradient Line
+      const gradientMaterial = new THREE.LineBasicMaterial({ color: 0x00ff00 });
+      const gradientPoints = [
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(1, 1, 0)
+      ];
+      const gradientGeometry = new THREE.BufferGeometry().setFromPoints(gradientPoints);
+      const gradientLine = new THREE.Line(gradientGeometry, gradientMaterial);
+      scene.add(gradientLine);
+
+      // Lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+      scene.add(ambientLight);
+      const pointLight = new THREE.PointLight(0xffffff, 1);
+      pointLight.position.set(5, 5, 5);
+      scene.add(pointLight);
+
+      // Mouse interaction
+      let isDragging = false;
+      let previousMousePosition = {
+        x: 0,
+        y: 0
+      };
+
+      const onMouseMove = (e) => {
+        if (!isDragging) return;
+
+        const deltaMove = {
+          x: e.offsetX - previousMousePosition.x,
+          y: e.offsetY - previousMousePosition.y
+        };
+
+        // Rotate camera
+        const deltaRotationQuaternion = new THREE.Quaternion()
+          .setFromEuler(new THREE.Euler(
+            toRadians(deltaMove.y * 1),
+            toRadians(deltaMove.x * 1),
+            0,
+            'XYZ'
+          ));
+
+        const currentRotation = new THREE.Quaternion().copy(camera.quaternion);
+        currentRotation.multiplyQuaternions(deltaRotationQuaternion, currentRotation);
+        camera.quaternion.copy(currentRotation);
+
+        previousMousePosition = {
+          x: e.offsetX,
+          y: e.offsetY
+        };
+      };
+
+      const onMouseDown = (e) => {
+        isDragging = true;
+        previousMousePosition = {
+          x: e.offsetX,
+          y: e.offsetY
+        };
+      };
+
+      const onMouseUp = () => {
+        isDragging = false;
+      };
+
+      // Convert degrees to radians
+      function toRadians(angle) {
+        return angle * (Math.PI / 180);
+      }
+
+      renderer.domElement.addEventListener('mousemove', onMouseMove, false);
+      renderer.domElement.addEventListener('mousedown', onMouseDown, false);
+      renderer.domElement.addEventListener('mouseup', onMouseUp, false);
+
+      // Animation function
+      const animate = () => {
+        requestAnimationFrame(animate);
+
+        // Animate point based on optimization step
+        switch(animationStep) {
+          case 0:
+            pointMesh.position.set(1/Math.sqrt(2), 1/Math.sqrt(2), 0);
+            break;
+          case 1:
+            pointMesh.position.set(0.7, 0.7, 0.2);
+            break;
+          case 2:
+            pointMesh.position.set(0.5, 0.5, 0.5);
+            break;
+          case 3:
+            pointMesh.position.set(1/Math.sqrt(2), 1/Math.sqrt(2), 0);
+            break;
+        }
+
+        renderer.render(scene, camera);
+      };
+
+      animate();
+
+      // Cleanup
+      return () => {
+        if (mountRef.current) {
+          mountRef.current.removeChild(renderer.domElement);
+        }
+        renderer.domElement.removeEventListener('mousemove', onMouseMove);
+        renderer.domElement.removeEventListener('mousedown', onMouseDown);
+        renderer.domElement.removeEventListener('mouseup', onMouseUp);
+      };
+    }, [animationStep]);
+
+    const handleNextStep = () => {
+      setAnimationStep((prevStep) => (prevStep + 1) % 4);
     };
 
-    draw(0);
-    return () => cancelAnimationFrame(animationFrame);
-  }, []);
+    const stepDescriptions = [
+      "Initial Constraint Surface",
+      "Gradient Computation",
+      "Optimization Progress",
+      "Optimal Point Found"
+    ];
 
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="relative w-full h-full"
-    >
-      <canvas
-        ref={canvasRef}
-        width={400}
-        height={400}
-        className="w-full h-full border rounded-lg bg-white"
-      />
-      <div className="absolute bottom-4 left-4 text-sm">
-        <span className="text-[#FF6B6B]">Objective Function</span><br/>
-        <span className="text-[#4ECDC4]">Constraint</span><br/>
-        <span className="text-[#45B7D1]">Gradient Vectors</span>
+    return (
+      <div className="p-4 bg-gray-100 rounded-lg">
+        <h2 className="text-xl font-bold mb-4">
+          3D Lagrange Multiplier Visualization
+        </h2>
+
+        <div className="flex items-center space-x-4 mb-4">
+          <button
+            onClick={handleNextStep}
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+          >
+            Next Step
+          </button>
+
+          <div className="text-gray-700">
+            {stepDescriptions[animationStep]}
+          </div>
+        </div>
+
+        <div
+          ref={mountRef}
+          className="w-full flex justify-center"
+        />
       </div>
-    </motion.div>
-  );
-};
+    );
+  };
 `;
 
 export default function AnimationPage() {
