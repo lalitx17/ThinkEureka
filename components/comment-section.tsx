@@ -3,6 +3,8 @@ import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useSession } from "next-auth/react";
+import { useAddComment } from "@/hooks/use-addComment";
 
 type CommentSectionProps = {
   animationId: string;
@@ -16,29 +18,35 @@ export default function CommentSection({
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { data: session } = useSession();
+  const { mutate: addComment } = useAddComment();
 
   const handleSubmitComment = async () => {
-    // if (!commentText.trim() || isSubmitting) return;
-    // try {
-    //   setIsSubmitting(true);
-    //   const newComment: Comment = {
-    //     id: `comment-${Date.now()}`,
-    //     content: commentText,
-    //     user: {
-    //       id: "temp-user-id",
-    //       email: "xx@gmail.com",
-    //       username: "You",
-    //     },
-    //     createdAt: new Date(),
-    //     updatedAt: new Date(),
-    //   };
-    //   setComments([newComment, ...comments]);
-    //   setCommentText("");
-    // } catch (error) {
-    //   console.error("Failed to submit comment", error);
-    // } finally {
-    //   setIsSubmitting(false);
-    // }
+    if (!session?.user?.id || !commentText.trim()) return;
+
+    setIsSubmitting(true);
+
+    addComment(
+      {
+        content: commentText,
+        userId: session.user.id,
+        postId: animationId,
+      },
+      {
+        onSuccess: (response) => {
+          if (response?.success && response.comment) {
+            setComments((prev) => [...prev, response.comment as Comment]);
+            setCommentText("");
+          }
+        },
+        onError: (error) => {
+          console.error("Error adding comment:", error);
+        },
+        onSettled: () => {
+          setIsSubmitting(false);
+        },
+      },
+    );
   };
 
   return (
@@ -61,7 +69,7 @@ export default function CommentSection({
             <div className="flex justify-end">
               <Button
                 onClick={handleSubmitComment}
-                disabled={!commentText.trim() || isSubmitting}
+                disabled={!commentText.trim() || isSubmitting || !session}
               >
                 {isSubmitting ? "Submitting..." : "Comment"}
               </Button>

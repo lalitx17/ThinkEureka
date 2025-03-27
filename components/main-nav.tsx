@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Home, Library, Search, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { useSession } from "next-auth/react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,11 +23,10 @@ export default function MainNav({ children }: MainNavProps) {
   const pathname = usePathname();
   const [isSignedIn, setIsSignedIn] = useState(false);
 
-  // Simulate authentication check
+  const { data: session } = useSession();
   useEffect(() => {
-    // For demo purposes, we'll consider the user signed in if they're on account pages
-    setIsSignedIn(pathname.startsWith("/account"));
-  }, [pathname]);
+    setIsSignedIn(!!session);
+  }, [session]);
 
   return (
     <>

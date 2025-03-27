@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 export default function SearchResultItem({
   animation,
 }: {
-  animation: AnimationData;
+  animation: AnimationPost;
 }) {
   // Generate a short description if one isn't provided
   const description =
@@ -36,7 +36,7 @@ export default function SearchResultItem({
 
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
           <span>{animation.likes} likes</span>
-          <span>{animation.comments} comments</span>
+          <span>{animation.comments?.length} comments</span>
           <Link
             href={`/search?q=${encodeURIComponent(animation.category)}`}
             className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium hover:bg-primary/10"
@@ -45,7 +45,7 @@ export default function SearchResultItem({
           </Link>
         </div>
 
-        {animation.averageRating !== undefined && (
+        {animation.AverageRating !== undefined && (
           <div className="mt-2 flex items-center gap-1">
             <div className="flex items-center">
               {[1, 2, 3, 4, 5].map((star) => (
@@ -53,7 +53,7 @@ export default function SearchResultItem({
                   key={star}
                   className={cn(
                     "h-4 w-4",
-                    star <= Math.round(animation.averageRating / 2)
+                    star <= Math.round(animation.AverageRating / 2)
                       ? "fill-yellow-400 text-yellow-400"
                       : "text-muted-foreground",
                   )}
@@ -61,7 +61,7 @@ export default function SearchResultItem({
               ))}
             </div>
             <span className="text-sm">
-              {animation.averageRating.toFixed(1)}/10 ({animation.ratingCount}{" "}
+              {animation.AverageRating.toFixed(1)}/10 ({animation.RatingCount}{" "}
               ratings)
             </span>
           </div>

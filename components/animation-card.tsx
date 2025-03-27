@@ -6,22 +6,38 @@ import Link from "next/link";
 import { Heart, MessageCircle, Star } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useToggleLike } from "@/hooks/use-toggleLike";
 
 export default function AnimationCard({
   animation,
 }: {
   animation: AnimationPost;
 }) {
-  const [liked, setLiked] = useState(false);
+  const { data: session } = useSession();
+  const router = useRouter();
+  const { mutate: toggleLike } = useToggleLike();
+
+  const [isLiked, setIsLiked] = useState(
+    animation.likedBy?.some((user) => user.id === session?.user?.id),
+  );
   const [likeCount, setLikeCount] = useState(animation.likes);
 
   const handleLike = () => {
-    if (liked) {
-      setLikeCount(likeCount - 1);
-    } else {
-      setLikeCount(likeCount + 1);
+    if (!session?.user?.id) {
+      router.push("/auth/login");
+      return;
     }
-    setLiked(!liked);
+
+    const newLikedState = !isLiked;
+    setIsLiked(newLikedState);
+    setLikeCount((prev) => (newLikedState ? prev + 1 : prev - 1));
+
+    toggleLike({
+      postId: animation.id,
+      userId: session.user.id,
+    });
   };
 
   return (
@@ -33,6 +49,7 @@ export default function AnimationCard({
             alt={animation.title}
             fill
             className="object-cover transition-transform hover:scale-105"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
             <span className="inline-block rounded-full bg-primary/90 px-2 py-0.5 text-xs font-medium text-primary-foreground">
@@ -76,7 +93,7 @@ export default function AnimationCard({
           className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary"
         >
           <Heart
-            className={cn("h-4 w-4", liked && "fill-primary text-primary")}
+            className={cn("h-4 w-4", isLiked && "fill-primary text-primary")}
           />
           <span>{likeCount}</span>
         </button>
@@ -85,7 +102,7 @@ export default function AnimationCard({
           className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary"
         >
           <MessageCircle className="h-4 w-4" />
-          <span>{animation.comments?.length || "0"}</span>
+          <span>{animation.comments?.length || 0}</span>
         </Link>
       </CardFooter>
     </Card>
