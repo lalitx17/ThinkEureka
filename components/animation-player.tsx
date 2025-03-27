@@ -1,204 +1,156 @@
-"use client"
-
-import { useEffect, useRef, useState } from "react"
-import { Heart, Pause, Play, Volume2, VolumeX } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Slider } from "@/components/ui/slider"
-import RatingModal from "@/components/rating-modal"
-import { cn } from "@/lib/utils"
+import React, { useState, useEffect, useRef } from "react";
+import * as Babel from "@babel/standalone";
+import { motion } from "framer-motion";
+import { Heart, Pause, Play } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import RatingModal from "@/components/rating-modal";
+import { cn } from "@/lib/utils";
 
 interface AnimationPlayerProps {
-  animationId: string
-  animationTitle: string
+  animationId: string;
+  animationTitle: string;
+  animationCode: string;
 }
 
-export default function AnimationPlayer({ animationId, animationTitle }: AnimationPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [progress, setProgress] = useState(0)
-  const [duration, setDuration] = useState(100)
-  const [liked, setLiked] = useState(false)
-  const [muted, setMuted] = useState(false)
-  const [showRatingModal, setShowRatingModal] = useState(false)
-  const [hasRated, setHasRated] = useState(false)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const animationFrameRef = useRef<number>(0)
+// This function transpiles the animation code dynamically
+const transpileAndGetComponent = (
+  animationCode: string,
+): React.FC<{ isPlaying: boolean }> | null => {
+  try {
+    const transpiledCode = Babel.transform(animationCode, {
+      presets: ["react", "env"],
+    }).code;
 
-  // Simulate animation playback
-  useEffect(() => {
-    if (!canvasRef.current) return
+    console.log("transpiled code: ", transpiledCode);
 
-    const canvas = canvasRef.current
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
+    let exports: { [key: string]: any } = {};
+    // Using a dynamic function to evaluate the transpiled code
+    new Function("exports", "React", "useState", "motion", transpiledCode!)(
+      exports,
+      React,
+      useState,
+      motion,
+    );
 
-    // Set canvas dimensions
-    canvas.width = canvas.clientWidth
-    canvas.height = canvas.clientHeight
-
-    let startTime: number | null = null
-    const animationDuration = 10000 // 10 seconds
-
-    const renderFrame = (timestamp: number) => {
-      if (!startTime) startTime = timestamp
-      if (!isPlaying) return
-
-      const elapsed = timestamp - startTime
-      const normalizedProgress = Math.min(elapsed / animationDuration, 1)
-      setProgress(normalizedProgress * 100)
-
-      // Check if animation has completed
-      if (normalizedProgress >= 1 && !hasRated) {
-        setIsPlaying(false)
-        setShowRatingModal(true)
-        return
-      }
-
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-      // Draw background
-      ctx.fillStyle = "#111"
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-      // Example animation for quantum superposition
-      // This is a simplified visualization
-      const centerX = canvas.width / 2
-      const centerY = canvas.height / 2
-      const maxRadius = Math.min(canvas.width, canvas.height) * 0.4
-
-      // Draw orbits
-      ctx.strokeStyle = "#333"
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.arc(centerX, centerY, maxRadius, 0, Math.PI * 2)
-      ctx.stroke()
-
-      // Draw nucleus
-      ctx.fillStyle = "#6366f1"
-      ctx.beginPath()
-      ctx.arc(centerX, centerY, 10, 0, Math.PI * 2)
-      ctx.fill()
-
-      // Draw electron in superposition (multiple positions simultaneously)
-      const positions = 8
-      const opacity = 0.7
-
-      for (let i = 0; i < positions; i++) {
-        const angle = (i / positions) * Math.PI * 2 + normalizedProgress * Math.PI * 4
-        const x = centerX + Math.cos(angle) * maxRadius
-        const y = centerY + Math.sin(angle) * maxRadius
-
-        ctx.fillStyle = `rgba(99, 102, 241, ${opacity / positions})`
-        ctx.beginPath()
-        ctx.arc(x, y, 5, 0, Math.PI * 2)
-        ctx.fill()
-
-        // Draw probability wave
-        ctx.strokeStyle = `rgba(99, 102, 241, ${opacity / (positions * 2)})`
-        ctx.lineWidth = 2
-        ctx.beginPath()
-        ctx.moveTo(centerX, centerY)
-        ctx.lineTo(x, y)
-        ctx.stroke()
-      }
-
-      // Draw probability cloud
-      ctx.fillStyle = `rgba(99, 102, 241, 0.1)`
-      ctx.beginPath()
-      ctx.arc(centerX, centerY, maxRadius, 0, Math.PI * 2)
-      ctx.fill()
-
-      if (normalizedProgress < 1) {
-        animationFrameRef.current = requestAnimationFrame(renderFrame)
-      } else if (!hasRated) {
-        setIsPlaying(false)
-        setShowRatingModal(true)
-        startTime = null
-      }
+    // Access the default export (LagrangeAnimation)
+    if (exports.default) {
+      return exports.default;
     }
 
-    if (isPlaying) {
-      animationFrameRef.current = requestAnimationFrame(renderFrame)
-    }
+    return null;
+  } catch (error) {
+    console.error("Error transpiling component:", error);
+    return null;
+  }
+};
 
-    return () => {
-      cancelAnimationFrame(animationFrameRef.current)
-    }
-  }, [isPlaying, animationId, hasRated])
+export default function AnimationPlayer({
+  animationId,
+  animationTitle,
+  animationCode,
+}: AnimationPlayerProps) {
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [liked, setLiked] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [hasRated, setHasRated] = useState(false);
+  const [animationComplete, setAnimationComplete] = useState(false);
+  const animationTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [DynamicComponent, setDynamicComponent] = useState<React.ComponentType<{
+    isPlaying: boolean;
+  }> | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  console.log("animation code: ", animationCode);
 
   useEffect(() => {
-    setDuration(100) // In a real app, this would be the actual duration
-
-    return () => {
-      cancelAnimationFrame(animationFrameRef.current)
+    const component = transpileAndGetComponent(animationCode);
+    if (!component) {
+      setError("Failed to load animation");
     }
-  }, [animationId])
+    setDynamicComponent(() => component);
+  }, [animationCode]);
+
+  console.log("dyanmic component :", DynamicComponent);
 
   const togglePlay = () => {
-    setIsPlaying(!isPlaying)
-  }
-
-  const handleProgressChange = (value: number[]) => {
-    setProgress(value[0])
-    // In a real implementation, you would seek to this position
-  }
+    setIsPlaying(!isPlaying);
+  };
 
   const toggleLike = () => {
-    setLiked(!liked)
-  }
-
-  const toggleMute = () => {
-    setMuted(!muted)
-  }
+    setLiked(!liked);
+  };
 
   const handleRatingSubmit = (rating: number) => {
-    console.log(`Submitted rating: ${rating}/10 for animation ${animationId}`)
-    setHasRated(true)
-    // In a real app, you would send this rating to your backend
-  }
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = Math.floor(seconds % 60)
-    return `${mins}:${secs.toString().padStart(2, "0")}`
-  }
-
-  const currentTime = (progress / 100) * duration
+    console.log(`Submitted rating: ${rating}/10 for animation ${animationId}`);
+    setHasRated(true);
+    setShowRatingModal(false);
+  };
 
   return (
     <>
-      <div className="relative bg-black">
-        <canvas ref={canvasRef} className="aspect-video w-full" />
+      <div className="relative aspect-video w-full overflow-hidden bg-black">
+        {error ? (
+          <div className="flex h-full w-full items-center justify-center bg-red-100 p-4 text-red-600">
+            <div className="max-w-md text-center">
+              <h3 className="mb-2 text-lg font-semibold">Animation Error</h3>
+              <p>{error}</p>
+            </div>
+          </div>
+        ) : (
+          <div className={cn("h-full w-full", !isPlaying && "opacity-50")}>
+            {DynamicComponent && <DynamicComponent isPlaying={isPlaying} />}
+          </div>
+        )}
+
+        {!isPlaying && !error && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Button
+              variant="outline"
+              size="lg"
+              className="rounded-full bg-white/10 text-white hover:bg-white/20"
+              onClick={togglePlay}
+            >
+              <Play className="mr-2 h-5 w-5" />
+              Resume Animation
+            </Button>
+          </div>
+        )}
 
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-          <div className="mb-2">
-            <Slider
-              value={[progress]}
-              min={0}
-              max={100}
-              step={0.1}
-              onValueChange={handleProgressChange}
-              className="h-1"
-            />
-          </div>
-
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-white hover:bg-white/20" onClick={togglePlay}>
-                {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-              </Button>
-
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-white hover:bg-white/20" onClick={toggleMute}>
-                {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-white hover:bg-white/20"
+                onClick={togglePlay}
+                disabled={!!error}
+              >
+                {isPlaying ? (
+                  <Pause className="h-4 w-4" />
+                ) : (
+                  <Play className="h-4 w-4" />
+                )}
               </Button>
 
               <span className="text-xs text-white">
-                {formatTime(currentTime)} / {formatTime(duration)}
+                {error
+                  ? "Animation error"
+                  : animationComplete
+                    ? "Animation complete"
+                    : "Interactive animation"}
               </span>
             </div>
 
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-white hover:bg-white/20" onClick={toggleLike}>
-              <Heart className={cn("h-4 w-4", liked && "fill-red-500 text-red-500")} />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-white hover:bg-white/20"
+              onClick={toggleLike}
+            >
+              <Heart
+                className={cn("h-4 w-4", liked && "fill-red-500 text-red-500")}
+              />
             </Button>
           </div>
         </div>
@@ -212,6 +164,5 @@ export default function AnimationPlayer({ animationId, animationTitle }: Animati
         onSubmit={handleRatingSubmit}
       />
     </>
-  )
+  );
 }
-
