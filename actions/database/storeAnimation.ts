@@ -1,10 +1,10 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 
-export async function createAnimationPost(data: AnimationData) {
+export async function createAnimationPost(data: AnimationPost) {
   try {
-    const requiredFields: (keyof AnimationData)[] = [
+    const requiredFields: (keyof AnimationPost)[] = [
       "title",
       "code",
       "thumbnail",
@@ -27,9 +27,11 @@ export async function createAnimationPost(data: AnimationData) {
         category: data.category,
         level: data.level,
         likes: data.likes || 0,
-        comments: data.comments || 0,
-        AverageRating: data.averageRating || 0,
-        RatingCount: data.ratingCount || 0,
+        comments: {
+          create: data.comments || [],
+        },
+        AverageRating: data.AverageRating || 0,
+        RatingCount: data.RatingCount || 0,
       },
     });
 

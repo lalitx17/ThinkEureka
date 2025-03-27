@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import ModelClient from "@azure-rest/ai-inference";
 import { AzureKeyCredential } from "@azure/core-auth";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { prompt } from "@/lib/prompt";
 
 export const dynamic = "force-dynamic";
@@ -114,7 +114,6 @@ export async function POST(req: Request) {
         level: parsedData.level || "Beginner",
         thumbnail: "/placeholder.svg?height=200&width=300",
         likes: 0,
-        comments: 0,
         AverageRating: 0,
         RatingCount: 0,
       },
@@ -129,7 +128,6 @@ export async function POST(req: Request) {
       description: newAnimation.description,
       level: newAnimation.level,
       likes: newAnimation.likes,
-      comments: newAnimation.comments,
       thumbnail: newAnimation.thumbnail,
       averageRating: newAnimation.AverageRating,
       ratingCount: newAnimation.RatingCount,
