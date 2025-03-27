@@ -2,7 +2,6 @@ import type React from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import MainNav from "@/components/main-nav";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryProvider } from "@/components/providers";
 
@@ -30,7 +29,6 @@ export default function RootLayout({
             storageKey="theme"
           >
             <div className="flex min-h-screen flex-col pb-16 md:pb-0 mx-auto">
-              <MainNav />
               <main className="flex-1 w-full">{children}</main>
             </div>
           </ThemeProvider>

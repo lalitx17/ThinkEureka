@@ -14,7 +14,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export default function MainNav() {
+interface MainNavProps {
+  children: React.ReactNode;
+}
+
+export default function MainNav({ children }: MainNavProps) {
   const pathname = usePathname();
   const [isSignedIn, setIsSignedIn] = useState(false);
 
@@ -71,6 +75,9 @@ export default function MainNav() {
           </div>
         </div>
       </header>
+
+      {/* Main content */}
+      <main className="flex-1 w-full">{children}</main>
 
       {/* Mobile tab bar */}
       <div className="fixed bottom-0 left-0 right-0 z-10 border-t bg-background md:hidden">
