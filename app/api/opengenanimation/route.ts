@@ -4,8 +4,6 @@ import { AzureKeyCredential } from "@azure/core-auth";
 import prisma from "@/lib/prisma";
 import { prompt } from "@/lib/prompt";
 
-export const dynamic = "force-dynamic";
-
 // Sanitize JSON function
 function sanitizeJson(jsonString: string): string {
   return jsonString
@@ -15,51 +13,64 @@ function sanitizeJson(jsonString: string): string {
     .trim();
 }
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
+  // Explicitly check environment variables
+  const endpoint = process.env.OPENAI_INFERENCE_ENDPOINT;
+  const apiKey = process.env.OPENAI_API_KEY;
+  const modelName = process.env.OPENAI_MODEL_NAME;
+
+  // Validate environment variables
+  if (!endpoint) {
+    return NextResponse.json(
+      { error: "OPENAI_INFERENCE_ENDPOINT is not set" },
+      { status: 500 },
+    );
+  }
+
+  if (!apiKey) {
+    return NextResponse.json(
+      { error: "OPENAI_API_KEY is not set" },
+      { status: 500 },
+    );
+  }
+
+  if (!modelName) {
+    return NextResponse.json(
+      { error: "OPENAI_MODEL_NAME is not set" },
+      { status: 500 },
+    );
+  }
+
   try {
-    // Validate environment variables
-    if (!process.env.AZURE_INFERENCE_ENDPOINT) {
-      throw new Error("AZURE_INFERENCE_ENDPOINT is not set");
-    }
-    if (!process.env.AZURE_API_KEY) {
-      throw new Error("AZURE_API_KEY is not set");
-    }
-    if (!process.env.AZURE_MODEL_NAME) {
-      throw new Error("AZURE_MODEL_NAME is not set");
-    }
-
-    const endpoint = process.env.AZURE_INFERENCE_ENDPOINT;
-    const modelName = process.env.AZURE_MODEL_NAME;
-
     // Parse request body
     const { query } = await req.json();
     console.log("Received query:", query);
 
     // Create Azure client
-    const client = ModelClient(
-      endpoint,
-      new AzureKeyCredential(process.env.AZURE_API_KEY),
-    );
+    const client = ModelClient(endpoint, new AzureKeyCredential(apiKey));
 
     // Send request to Azure
     const response = await client.path("/chat/completions").post({
       body: {
         messages: [
-          {
-            role: "user",
-            content: prompt(query),
-          },
+          { role: "system", content: "You are a helpful assistant." },
+
+          { role: "user", content: prompt(query) },
         ],
-        max_tokens: 10000,
+        max_tokens: 1000,
         model: modelName,
-        temperature: 0.0,
+        temperature: 0.1,
       },
     });
 
+    console.log("response.body :", response.body);
+
     // Check response
-    if (!response) {
+    if (!response || !response.body || !response.body.choices) {
       return NextResponse.json(
-        { error: "Azure API request failed" },
+        { error: "Invalid Azure API response" },
         { status: 500 },
       );
     }
@@ -68,38 +79,32 @@ export async function POST(req: Request) {
     const content = response.body.choices[0].message.content;
     console.log("Raw API response:", content);
 
-    // JSON extraction with multiple parsing strategies
-    const jsonRegex = /\{[\s\S]*\}/;
-    const jsonMatch = content.match(jsonRegex);
-
-    if (!jsonMatch) {
-      throw new Error("No valid JSON found in response");
-    }
-
-    // Try parsing with multiple strategies
+    // JSON parsing with multiple strategies
     let parsedData;
     try {
       // First, try basic sanitization
-      parsedData = JSON.parse(sanitizeJson(jsonMatch[0].trim()));
+      parsedData = JSON.parse(sanitizeJson(content));
     } catch (parseError) {
       try {
         // If first attempt fails, try more aggressive cleaning
-        parsedData = JSON.parse(
-          jsonMatch[0].trim().replace(/[^\x20-\x7E]/g, ""), // Remove all non-printable characters
-        );
+        parsedData = JSON.parse(content.trim().replace(/[^\x20-\x7E]/g, ""));
       } catch (aggressiveCleanError) {
         console.error("JSON parsing failed:", parseError, aggressiveCleanError);
+        console.log("Problematic JSON content:", content);
 
-        // Log the problematic content for debugging
-        console.log("Problematic JSON content:", jsonMatch[0]);
-
-        throw new Error("Could not parse JSON response");
+        return NextResponse.json(
+          { error: "Could not parse JSON response" },
+          { status: 500 },
+        );
       }
     }
 
     // Validate parsed data
     if (!parsedData.title || !parsedData.category) {
-      throw new Error("Invalid JSON structure");
+      return NextResponse.json(
+        { error: "Invalid JSON structure" },
+        { status: 500 },
+      );
     }
 
     // Create animation in database

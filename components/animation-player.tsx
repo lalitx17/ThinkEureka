@@ -1,7 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import * as Babel from "@babel/standalone";
 import { motion, useMotionValue, useDragControls } from "framer-motion";
-import { Heart, Pause, Play, Maximize, Minimize } from "lucide-react";
+import {
+  Heart,
+  Pause,
+  Play,
+  Maximize,
+  Minimize,
+  RefreshCw,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import RatingModal from "@/components/rating-modal";
 import { cn } from "@/lib/utils";
@@ -14,9 +21,7 @@ interface AnimationPlayerProps {
 }
 
 // This function transpiles the animation code dynamically
-const transpileAndGetComponent = (
-  animationCode: string,
-): React.FC<{ isPlaying: boolean }> | null => {
+const transpileAndGetComponent = (animationCode: string): React.FC | null => {
   try {
     // Modify the transpiled code to explicitly import Framer Motion
 
@@ -81,9 +86,8 @@ export default function AnimationPlayer({
   const [animationComplete, setAnimationComplete] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const animationTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const [DynamicComponent, setDynamicComponent] = useState<React.ComponentType<{
-    isPlaying: boolean;
-  }> | null>(null);
+  const [DynamicComponent, setDynamicComponent] =
+    useState<React.ComponentType | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   console.log("animation code: ", animationCode);
@@ -120,7 +124,7 @@ export default function AnimationPlayer({
     <>
       <div
         className={cn(
-          "relative overflow-hidden bg-orange-50 transition-all duration-300 ease-in-out",
+          "relative overflow-hidden bg-white transition-all duration-300 ease-in-out",
           isFullScreen
             ? "fixed inset-0 z-50 w-screen h-screen"
             : "aspect-video w-full",
@@ -135,11 +139,11 @@ export default function AnimationPlayer({
           </div>
         ) : (
           <div className={cn("h-full w-full", !isPlaying && "opacity-50")}>
-            {DynamicComponent && <DynamicComponent isPlaying={isPlaying} />}
+            {DynamicComponent && <DynamicComponent />}
           </div>
         )}
 
-        {!isPlaying && !error && (
+        {/* {!isPlaying && !error && (
           <div className="absolute inset-0 flex items-center justify-center">
             <Button
               variant="outline"
@@ -151,12 +155,12 @@ export default function AnimationPlayer({
               Resume Animation
             </Button>
           </div>
-        )}
+        )} */}
 
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Button
+              {/* <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 text-white hover:bg-white/20"
@@ -176,7 +180,7 @@ export default function AnimationPlayer({
                   : animationComplete
                     ? "Animation complete"
                     : "Interactive animation"}
-              </span>
+              </span> */}
             </div>
 
             <div className="flex items-center gap-2">
